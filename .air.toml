@@ -1,0 +1,52 @@
+# Set the root directory to the folder where your main.go is located
+root_dir = "cmd/server"
+
+# Temporary directory for the binary
+tmp_dir = "tmp"
+
+[build]
+  # Binary output path
+  bin = "./tmp/main"
+  
+  # Build command: ensures Air builds the Go application in the correct directory
+  cmd = "go build -o ./tmp/main ./cmd/server"
+  
+  # Delay before rebuilding after file changes (in ms)
+  delay = 1000
+
+  # Exclude directories from being watched
+  exclude_dir = ["assets", "tmp", "vendor", "testdata"]
+
+  # Exclude test files and specific regex matches
+  exclude_regex = ["_test.go"]
+
+  # Watch for changes in .go, .tpl, .tmpl, .html files
+  include_ext = ["go", "tpl", "tmpl", "html"]
+
+  # Optional: Log build errors to a specific file
+  log = "build-errors.log"
+
+[color]
+  # Set colors for the console output
+  build = "yellow"
+  main = "magenta"
+  runner = "green"
+  watcher = "cyan"
+
+[log]
+  # Show full logs with time
+  time = false
+
+[misc]
+  # Keep tmp files after exit
+  clean_on_exit = false
+
+[proxy]
+  # Proxy settings (if using a proxy, set it up here)
+  enabled = false
+
+[screen]
+  # Clear screen on rebuild
+  clear_on_rebuild = false
+  # Keep scrollback history
+  keep_scroll = true
