@@ -32,7 +32,7 @@ type SafeUser struct {
 func (h *UserHandler) Register(c *fiber.Ctx) error {
 	var newUser models.User
 
-	//  Parse request body
+	// Parse request body
 	if err := c.BodyParser(&newUser); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Cannot parse user data",
@@ -40,14 +40,14 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Validate required fields
+	// Validate required fields
 	if newUser.Username == "" || newUser.Password == "" || newUser.Email == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Username and password are required",
 		})
 	}
 
-	//  Check for existing username
+	// Check for existing username
 	var existingUser models.User
 	if err := h.DB.Where("username = ?", newUser.Username).First(&existingUser).Error; err == nil {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
@@ -55,14 +55,14 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Check for existing email
+	// Check for existing email
 	if err := h.DB.Where("email = ?", newUser.Email).First(&existingUser).Error; err == nil {
 		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
 			"message": "Email already exists",
 		})
 	}
 
-	//  Hash the password
+	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -72,7 +72,7 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 	}
 	newUser.Password = string(hashedPassword)
 
-	//  Create new user in the database
+	// Create new user in the database
 	result := h.DB.Create(&newUser)
 	if result.Error != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -81,14 +81,14 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Prepare safe user data for response
+	// Prepare safe user data for response
 	safeUser := SafeUser{
 		ID:       newUser.ID,
 		Username: newUser.Username,
 		Email:    newUser.Email,
 	}
 
-	//  Return success response
+	// Return success response
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"message": "User registered successfully",
 		"user":    safeUser,
@@ -102,7 +102,7 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		Password string `json:"password"`
 	}
 
-	//  Parse login data
+	// Parse login data
 	if err := c.BodyParser(&loginData); err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Cannot parse login data",
@@ -110,7 +110,7 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Find user by email
+	// Find user by email
 	var user models.User
 	result := h.DB.Where("email = ?", loginData.Email).First(&user)
 	if result.Error != nil {
@@ -119,7 +119,7 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Verify password
+	// Verify password
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginData.Password))
 	if err != nil {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
@@ -127,17 +127,17 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Generate JWT claims
+	// Generate JWT claims
 	claims := jwt.MapClaims{
 		"user_id":  user.ID,
 		"username": user.Username,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	}
 
-	//  Create new JWT token
+	// Create new JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
-	//  Sign the token
+	// Sign the token
 	secretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
 	t, err := token.SignedString(secretKey)
 	if err != nil {
@@ -147,14 +147,14 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	//  Prepare safe user data for response
+	// Prepare safe user data for response
 	safeUser := SafeUser{
 		ID:       user.ID,
 		Username: user.Username,
 		Email:    user.Email,
 	}
 
-	//  Return success response with token and user data
+	// Return success response with token and user data
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message": "Login successful",
 		"token":   t,
