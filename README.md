@@ -1,80 +1,199 @@
-# API Documentation
+# Social Media API Documentation
 
-This README provides examples of how to interact with the API using curl commands. Make sure to replace `http://localhost:8000` with the appropriate base URL if your API is hosted elsewhere.
+This README provides documentation for the Social Media API, detailing the available endpoints and how to use them.
+
+## Table of Contents
+1. [Authentication](#authentication)
+2. [User Management](#user-management)
+3. [Post Management](#post-management)
+4. [Comment Management](#comment-management)
+5. [Reaction Management](#reaction-management)
 
 ## Authentication
 
 ### Register a new user
-```bash
-curl -X POST http://localhost:8000/register -H "Content-Type: application/json" -d '{"username": "newuser", "email": "newuser@example.com", "password": "password123"}'
-```
+
+
+curl -X POST http://localhost:8000/register \
+-H "Content-Type: application/json" \
+-d '{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "password": "strongpassword123"
+}'
+
 
 ### Login
-```bash
-curl -X POST http://localhost:8000/login -H "Content-Type: application/json" -d '{"email": "newuser@example.com", "password": "password123"}'
-```
 
-After successful login, you'll receive a JWT token. Use this token in the `Authorization` header for authenticated requests.
 
-## Posts
+curl -X POST http://localhost:8000/login \
+-H "Content-Type: application/json" \
+-d '{
+  "email": "john@example.com",
+  "password": "strongpassword123"
+}'
+
+
+## User Management
+
+### Get user details
+
+
+curl -X GET http://localhost:8000/users/1 \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+### Update user details
+
+
+curl -X PUT http://localhost:8000/users/1 \
+-H "Authorization: Bearer <your-jwt-token>" \
+-H "Content-Type: application/json" \
+-d '{
+  "username": "john_new",
+  "email": "john_new@example.com",
+  "bio": "Updated bio"
+}'
+
+
+### Upload user avatar
+
+
+curl -X POST http://localhost:8000/users/1/avatar \
+-H "Authorization: Bearer <your-jwt-token>" \
+-F "avatar=@/path/to/avatar.png"
+
+
+### Follow a user
+
+
+curl -X POST http://localhost:8000/users/1/follow/2 \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+### Unfollow a user
+
+
+curl -X DELETE http://localhost:8000/users/1/unfollow/2 \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+### Get user followers
+
+
+curl -X GET http://localhost:8000/users/1/followers \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+### Get users being followed
+
+
+curl -X GET http://localhost:8000/users/1/following \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+## Post Management
 
 ### Get all posts
-```bash
-curl -X GET http://localhost:8000/posts -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
+
+
+curl -X GET http://localhost:8000/posts \
+-H "Authorization: Bearer <your-jwt-token>"
+
 
 ### Create a new post
-```bash
-curl -X POST http://localhost:8000/posts -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"title": "New Post", "content": "Post content", "category": "General", "tags": ["tag1", "tag2"]}' -F "image=@/path/to/image.j```pg"
 
 
-### Get a post by ID
-```bash
-curl -X GET http://localhost:8000/posts/1 -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
+curl -X POST http://localhost:8000/posts \
+-H "Content-Type: multipart/form-data" \
+-H "Authorization: Bearer <your-jwt-token>" \
+-F "title=Sample Post" \
+-F "content=This is the content of the post" \
+-F "category=tech" \
+-F "tags=tech,programming" \
+-F "image=@/path/to/image.jpg"
+
 
 ### Update a post
-```bash
-curl -X PUT http://localhost:8000/posts/1 -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"title": "Updated Post Title", "content": "Updated content"}'
-```
+
+
+curl -X PUT http://localhost:8000/posts/1 \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your-jwt-token>" \
+-d '{
+  "title": "Updated Post Title",
+  "content": "Updated content",
+  "category": "tech"
+}'
+
 
 ### Delete a post
-```bash
-curl -X DELETE http://localhost:8000/posts/1 -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
+
+
+curl -X DELETE http://localhost:8000/posts/1 \
+-H "Authorization: Bearer <your-jwt-token>"
+
 
 ### Get posts by user
-```bash
-curl -X GET http://localhost:8000/users/1/posts -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
 
-## Comments
+
+curl -X GET http://localhost:8000/users/1/posts \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+### Get post by username and slug
+
+
+curl -X GET http://localhost:8000/posts/username/sample-post-slug \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+## Comment Management
 
 ### Add a comment to a post
-```bash
-curl -X POST http://localhost:8000/posts/2/comments -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"content": "This is a comment"}'
-```
+
+
+curl -X POST http://localhost:8000/posts/1/comments \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your-jwt-token>" \
+-d '{
+  "comment": "This is a great post!"
+}'
+
 
 ### Update a comment
-```bash
-curl -X PUT http://localhost:8000/comments/1 -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"content": "Updated comment"}'
-```
+
+
+curl -X PUT http://localhost:8000/comments/1 \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your-jwt-token>" \
+-d '{
+  "comment": "Updated comment text"
+}'
+
 
 ### Delete a comment
-```bash
-curl -X DELETE http://localhost:8000/comments/1 -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
 
-## Reactions
+curl -X DELETE http://localhost:8000/comments/1 \
+-H "Authorization: Bearer <your-jwt-token>"
 
-### Add or update a reaction to a post
-```bash
-curl -X POST http://localhost:8000/posts/2/reactions -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"reaction_type": "like"}'
-```
+
+## Reaction Management
+
+### Add a reaction to a post
+
+curl -X POST http://localhost:8000/posts/1/reactions \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <your-jwt-token>" \
+-d '{
+  "reaction_type": "like"
+}'
+
 
 ### Remove a reaction from a post
-```bash
-curl -X DELETE http://localhost:8000/posts/2/reactions -H "Authorization: Bearer YOUR_JWT_TOKEN"
-```
 
-Note: Replace `YOUR_JWT_TOKEN` with the actual JWT token received after login.
+curl -X DELETE http://localhost:8000/posts/1/reactions \
+-H "Authorization: Bearer <your-jwt-token>"
+
+
+Note: Replace `<your-jwt-token>` with the actual JWT token received after login.

@@ -12,8 +12,10 @@ type Post struct {
 	Title            string         `json:"title" gorm:"not null"`
 	Content          string         `json:"content" gorm:"not null"`
 	UserID           uint           `json:"user_id" gorm:"not null"`
+	User             User           `json:"user" gorm:"foreignKey:UserID"`
 	Category         string         `json:"category" gorm:"not null"`
 	Tags             pq.StringArray `json:"tags" gorm:"type:text[]"`
+	Slug             string         `json:"slug" gorm:"not null"`
 	FeaturedImage    string         `json:"featured_image"`
 	Status           string         `json:"status" gorm:"not null;default:draft"`
 	ViewCount        uint           `json:"view_count" gorm:"not null;default:0"`

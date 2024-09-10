@@ -37,10 +37,20 @@ func main() {
 	// Protected routes group
 	api := router.Group("/", middleware.AuthMiddleware())
 
+	// User routes
+	users := api.Group("/users")
+	users.Get("/:id", userHandler.GetProfile)
+	users.Put("/:id", userHandler.UpdateProfile)
+	users.Post("/:id/avatar", userHandler.UploadAvatar)
+	users.Post("/:followerID/follow/:followingID", userHandler.FollowUser)
+	users.Delete("/:followerID/unfollow/:followingID", userHandler.UnfollowUser)
+	users.Get("/:id/followers", userHandler.GetFollowers)
+	users.Get("/:id/following", userHandler.GetFollowing)
+
 	// Post routes
 	api.Get("/posts", postHandler.GetPosts)
 	api.Post("/posts", postHandler.NewPost)
-	api.Get("/posts/:id", postHandler.GetPostById)
+	api.Get("posts/:username/:slug", postHandler.GetPostBySlug)
 	api.Put("/posts/:id", postHandler.UpdatePost)
 	api.Delete("/posts/:id", postHandler.DeletePost)
 	api.Get("/users/:id/posts", postHandler.GetPostsByUser)
