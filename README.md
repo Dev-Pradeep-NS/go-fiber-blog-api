@@ -1,78 +1,80 @@
-curl -X POST http://localhost:8000/register \
--H "Content-Type: application/json" \
--d '{
-  "username": "newuser",
-  "password": "securepassword123"
-}'
+# API Documentation
+
+This README provides examples of how to interact with the API using curl commands. Make sure to replace `http://localhost:8000` with the appropriate base URL if your API is hosted elsewhere.
+
+## Authentication
+
+### Register a new user
+
+curl -X POST http://localhost:8000/register -H "Content-Type: application/json" -d '{"username": "newuser", "email": "newuser@example.com", "password": "password123"}'
 
 
-curl -X POST http://localhost:8000/login \
--H "Content-Type: application/json" \
--d '{
-  "username": "pradeep",
-  "password": "securepassword123"
-}'
+### Login
+
+curl -X POST http://localhost:8000/login -H "Content-Type: application/json" -d '{"email": "newuser@example.com", "password": "password123"}'
 
 
-curl -X GET http://localhost:8000/albums \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg"
+After successful login, you'll receive a JWT token. Use this token in the `Authorization` header for authenticated requests.
+
+## Posts
+
+### Get all posts
+
+curl -X GET http://localhost:8000/posts -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
 
-curl -X POST http://localhost:8000/albums \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg" \
--H "Content-Type: application/json" \
--d '{
-  "title": "New Album",
-  "artist": "New Artist",
-  "price": 19.99
-}'
+### Create a new post
+
+curl -X POST http://localhost:8000/posts -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"title": "New Post", "content": "Post content", "category": "General", "tags": ["tag1", "tag2"]}' -F "image=@/path/to/image.jpg"
 
 
-curl -X GET http://localhost:8000/albums/1 \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg"
+### Get a post by ID
+
+curl -X GET http://localhost:8000/posts/1 -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
 
-curl -X PUT http://localhost:8000/albums/1 \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg" \
--H "Content-Type: application/json" \
--d '{
-  "title": "Updated Album",
-  "artist": "Updated Artist",
-  "price": 24.99
-}'
+### Update a post
+
+curl -X PUT http://localhost:8000/posts/1 -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"title": "Updated Post Title", "content": "Updated content"}'
 
 
-curl -X DELETE http://localhost:8000/albums/1 \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg"
+### Delete a post
+
+curl -X DELETE http://localhost:8000/posts/1 -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
 
-// Posts -----
+### Get posts by user
 
-curl -X GET http://localhost:8000/posts \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg"
-
-
-curl -X POST http://localhost:8000/posts \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg" \
--H "Content-Type: application/json" \
--d '{
-  "title": "New title",
-  "content": "New content"
-}'
+curl -X GET http://localhost:8000/users/1/posts -H "Authorization: Bearer YOUR_JWT_TOKEN"
 
 
-curl -X GET http://localhost:8000/posts/1 \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg"
+## Comments
+
+### Add a comment to a post
+
+curl -X POST http://localhost:8000/posts/2/comments -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"content": "This is a comment"}'
 
 
-curl -X PUT http://localhost:8000/posts/1 \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg" \
--H "Content-Type: application/json" \
--d '{
- "title": "Updated Title",
-  "content": "Updated content"
-}'
+### Update a comment
+
+curl -X PUT http://localhost:8000/comments/1 -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"content": "Updated comment"}'
 
 
-curl -X DELETE http://localhost:8000/posts/1 \
--H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MjU5NzE4NTAsInVzZXJfaWQiOjEsInVzZXJuYW1lIjoicHJhZGVlcCJ9.aSW-2osyEIc-awTdfgSoTRtKTo6kDqS8WnD54Uwb7Rg"
+### Delete a comment
+
+curl -X DELETE http://localhost:8000/comments/1 -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+## Reactions
+
+### Add or update a reaction to a post
+
+curl -X POST http://localhost:8000/posts/2/reactions -H "Authorization: Bearer YOUR_JWT_TOKEN" -H "Content-Type: application/json" -d '{"reaction_type": "like"}'
+
+
+### Remove a reaction from a post
+
+curl -X DELETE http://localhost:8000/posts/2/reactions -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+
+Note: Replace `YOUR_JWT_TOKEN` with the actual JWT token received after login.

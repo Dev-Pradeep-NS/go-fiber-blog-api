@@ -11,36 +11,49 @@ import (
 )
 
 func main() {
+	// Load configuration
 	cfg := config.Load()
 
+	// Connect to the database
 	db, err := database.Connect(cfg.DatabaseURL)
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
 
+	// Initialize Fiber router
 	router := fiber.New()
 	router.Use(middleware.CorsMiddleware())
 
-	albumHandler := handlers.NewAlbumHandler(db)
+	// Initialize handlers
 	userHandler := handlers.NewUserHandler(db)
 	postHandler := handlers.NewPostHandler(db)
+	commentHandler := handlers.NewCommentHandler(db)
+	likes_and_dislikes := handlers.NewLikesandDislikes(db)
 
+	// Public routes
 	router.Post("/login", userHandler.Login)
 	router.Post("/register", userHandler.Register)
 
+	// Protected routes group
 	api := router.Group("/", middleware.AuthMiddleware())
 
-	api.Get("albums", albumHandler.GetAlbums)
-	api.Post("albums", albumHandler.CreateAlbum)
-	api.Get("albums/:id", albumHandler.GetAlbumByID)
-	api.Put("albums/:id", albumHandler.UpdateAlbum)
-	api.Delete("albums/:id", albumHandler.DeleteAlbum)
+	// Post routes
+	api.Get("/posts", postHandler.GetPosts)
+	api.Post("/posts", postHandler.NewPost)
+	api.Get("/posts/:id", postHandler.GetPostById)
+	api.Put("/posts/:id", postHandler.UpdatePost)
+	api.Delete("/posts/:id", postHandler.DeletePost)
+	api.Get("/users/:id/posts", postHandler.GetPostsByUser)
 
-	api.Get("posts", postHandler.GetPosts)
-	api.Post("posts", postHandler.NewPost)
-	api.Get("posts/:id", postHandler.GetPostById)
-	api.Put("posts/:id", postHandler.UpdatePost)
-	api.Delete("posts/:id", postHandler.DeletePost)
+	// Comment routes
+	api.Post("/posts/:id/comments", commentHandler.AddComment)
+	api.Put("/comments/:id", commentHandler.UpdateComment)
+	api.Delete("/comments/:id", commentHandler.DeleteComment)
 
+	// Reaction routes
+	api.Post("/posts/:id/reactions", likes_and_dislikes.AddReaction)
+	api.Delete("/posts/:id/reactions", likes_and_dislikes.RemoveReaction)
+
+	// Start the server
 	log.Fatal(router.Listen(":" + cfg.PORT))
 }
