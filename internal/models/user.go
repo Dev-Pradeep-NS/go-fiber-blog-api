@@ -18,8 +18,10 @@ type User struct {
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"updated_at"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
+	// BookmarkedPosts []*Post        `json:"bookmarks" gorm:"many2many:user_bookmarks;"`
 
 	Posts            []Post             `json:"posts" gorm:"foreignKey:UserID"`
 	Comments         []Comment          `json:"comments" gorm:"foreignKey:UserID"`
 	LikesandDislikes []LikesandDislikes `json:"likesanddislikes" gorm:"foreignKey:UserID"`
+	Bookmarks        []Bookmark         `json:"bookmarks" gorm:"foreignKey:UserID"`
 }

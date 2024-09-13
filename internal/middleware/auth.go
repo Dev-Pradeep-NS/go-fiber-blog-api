@@ -10,14 +10,22 @@ import (
 
 func AuthMiddleware() fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		var tokenString string
+
 		authHeader := c.Get("Authorization")
-		if authHeader == "" {
-			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
-				"message": "Missing authorization header",
-			})
+		if authHeader != "" {
+			tokenString = strings.TrimPrefix(authHeader, "Bearer ")
 		}
 
-		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+		if tokenString == "" {
+			tokenString = c.Query("token")
+		}
+
+		if tokenString == "" {
+			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+				"message": "Missing authorization token",
+			})
+		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 			return []byte(os.Getenv("JWT_SECRET_KEY")), nil

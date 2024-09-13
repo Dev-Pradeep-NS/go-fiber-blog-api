@@ -1,199 +1,91 @@
-# Social Media API Documentation
+# Social Media API
 
-This README provides documentation for the Blog App API, detailing the available endpoints and how to use them.
+This is a RESTful API for a social media application, providing endpoints for user management, post creation and interaction, commenting, and reactions.
 
 ## Table of Contents
-1. [Authentication](#authentication)
-2. [User Management](#user-management)
-3. [Post Management](#post-management)
-4. [Comment Management](#comment-management)
-5. [Reaction Management](#reaction-management)
+1. [Features](#features)
+2. [Getting Started](#getting-started)
+3. [Authentication](#authentication)
+4. [API Endpoints](#api-endpoints)
+5. [Error Handling](#error-handling)
+6. [Rate Limiting](#rate-limiting)
+
+## Features
+
+- User registration and authentication
+- User profile management (including avatar upload)
+- Post creation, updating, and deletion
+- Commenting on posts
+- Reacting to posts (like, etc.)
+- Following/unfollowing users
+- Fetching user posts and followers
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies
+3. Set up your environment variables
+4. Run the server
+
+
+git clone https://github.com/yourusername/social-media-api.git
+cd social-media-api
+npm install
+cp .env.example .env
+# Edit .env with your configuration
+npm start
+
 
 ## Authentication
 
-### Register a new user
+This API uses JWT (JSON Web Tokens) for authentication. To access protected endpoints, include the JWT token in the Authorization header of your requests:
 
-```bash
-curl -X POST http://localhost:8000/register \
--H "Content-Type: application/json" \
--d '{
-  "username": "john_doe",
-  "email": "john@example.com",
-  "password": "strongpassword123"
-}'
-```
 
-### Login
+Authorization: Bearer <your_jwt_token>
 
-```bash
-curl -X POST http://localhost:8000/login \
--H "Content-Type: application/json" \
--d '{
-  "email": "john@example.com",
-  "password": "strongpassword123"
-}'
-```
 
-## User Management
+## API Endpoints
 
-### Get user details
+### Authentication
+- `POST /register`: Register a new user
+- `POST /login`: Login and receive a JWT token
 
-```bash
-curl -X GET http://localhost:8000/users/1 \
--H "Authorization: Bearer <your-jwt-token>"
-```
+### User Management
+- `GET /users/:id`: Get user details
+- `PUT /users/:id`: Update user details
+- `POST /users/:id/avatar`: Upload user avatar
+- `POST /users/:id/follow`: Follow a user
+- `DELETE /users/:id/unfollow/:targetId`: Unfollow a user
+- `GET /users/:id/followers`: Get user followers
+- `GET /users/:id/following`: Get users being followed
 
-### Update user details
+### Post Management
+- `GET /posts`: Get all posts
+- `POST /posts`: Create a new post
+- `PUT /posts/:id`: Update a post
+- `DELETE /posts/:id`: Delete a post
+- `GET /users/:id/posts`: Get posts by user
+- `GET /posts/:username/:slug`: Get post by username and slug
 
-```bash
-curl -X PUT http://localhost:8000/users/1 \
--H "Authorization: Bearer <your-jwt-token>" \
--H "Content-Type: application/json" \
--d '{
-  "username": "john_new",
-  "email": "john_new@example.com",
-  "bio": "Updated bio"
-}'
-```
+### Comment Management
+- `POST /posts/:id/comments`: Add a comment to a post
+- `PUT /comments/:id`: Update a comment
+- `DELETE /comments/:id`: Delete a comment
 
-### Upload user avatar
+### Reaction Management
+- `POST /posts/:id/reactions`: Add a reaction to a post
+- `DELETE /posts/:id/reactions`: Remove a reaction from a post
 
-```bash
-curl -X POST http://localhost:8000/users/1/avatar \
--H "Authorization: Bearer <your-jwt-token>" \
--F "avatar=@/path/to/avatar.png"
-```
+## Error Handling
 
-### Follow a user
+The API uses standard HTTP status codes to indicate the success or failure of requests. In case of an error, the response will include a JSON object with an `error` field describing the issue.
 
-```bash
-curl -X POST http://localhost:8000/users/1/follow/2 \
--H "Authorization: Bearer <your-jwt-token>"
-```
+## Rate Limiting
 
-### Unfollow a user
+To prevent abuse, this API implements rate limiting. Please refer to the response headers for information on your current rate limit status.
 
-```bash
-curl -X DELETE http://localhost:8000/users/1/unfollow/2 \
--H "Authorization: Bearer <your-jwt-token>"
-```
+---
 
-### Get user followers
+For detailed information on request and response formats, please refer to our [API Documentation](API_DOCS.md).
 
-```bash
-curl -X GET http://localhost:8000/users/1/followers \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-### Get users being followed
-
-```bash
-curl -X GET http://localhost:8000/users/1/following \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-## Post Management
-
-### Get all posts
-
-```bash
-curl -X GET http://localhost:8000/posts \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-### Create a new post
-
-```bash
-curl -X POST http://localhost:8000/posts \
--H "Content-Type: multipart/form-data" \
--H "Authorization: Bearer <your-jwt-token>" \
--F "title=Sample Post" \
--F "content=This is the content of the post" \
--F "category=tech" \
--F "tags=tech,programming" \
--F "image=@/path/to/image.jpg"
-```
-
-### Update a post
-
-```bash
-curl -X PUT http://localhost:8000/posts/1 \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <your-jwt-token>" \
--d '{
-  "title": "Updated Post Title",
-  "content": "Updated content",
-  "category": "tech"
-}'
-```
-
-### Delete a post
-
-```bash
-curl -X DELETE http://localhost:8000/posts/1 \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-### Get posts by user
-
-```bash
-curl -X GET http://localhost:8000/users/1/posts \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-### Get post by username and slug
-
-```bash
-curl -X GET http://localhost:8000/posts/username/sample-post-slug \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-## Comment Management
-
-### Add a comment to a post
-
-```bash
-curl -X POST http://localhost:8000/posts/1/comments \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <your-jwt-token>" \
--d '{
-  "comment": "This is a great post!"
-}'
-```
-
-### Update a comment
-
-```bash
-curl -X PUT http://localhost:8000/comments/1 \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <your-jwt-token>" \
--d '{
-  "comment": "Updated comment text"
-}'
-```
-
-### Delete a comment
-```bash
-curl -X DELETE http://localhost:8000/comments/1 \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-## Reaction Management
-
-### Add a reaction to a post
-```bash
-curl -X POST http://localhost:8000/posts/1/reactions \
--H "Content-Type: application/json" \
--H "Authorization: Bearer <your-jwt-token>" \
--d '{
-  "reaction_type": "like"
-}'
-```
-
-### Remove a reaction from a post
-```bash
-curl -X DELETE http://localhost:8000/posts/1/reactions \
--H "Authorization: Bearer <your-jwt-token>"
-```
-
-Note: Replace `<your-jwt-token>` with the actual JWT token received after login.
+For any issues or feature requests, please [open an issue](https://github.com/yourusername/social-media-api/issues) on our GitHub repository.

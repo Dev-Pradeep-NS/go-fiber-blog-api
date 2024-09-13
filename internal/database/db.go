@@ -12,7 +12,7 @@ func Connect(dsn string) (*gorm.DB, error) {
 		return nil, err
 	}
 
-	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.LikesandDislikes{})
+	err = db.AutoMigrate(&models.User{}, &models.Post{}, &models.Comment{}, &models.LikesandDislikes{}, &models.Bookmark{})
 	if err != nil {
 		return nil, err
 	}

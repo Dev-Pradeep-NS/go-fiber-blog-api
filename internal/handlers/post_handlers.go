@@ -21,11 +21,22 @@ func NewPostHandler(db *gorm.DB) *PostHandler {
 	return &PostHandler{DB: db}
 }
 
+func (h *PostHandler) GetImage(c *fiber.Ctx) error {
+	filename := c.Params("filename")
+	filepath := filepath.Join("./uploads", filename)
+
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		return c.Status(fiber.StatusNotFound).SendString("File not found")
+	}
+
+	return c.SendFile(filepath)
+}
+
 func (h *PostHandler) GetPosts(c *fiber.Ctx) error {
 	var posts []models.Post
 	result := h.DB.
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "username", "email")
+			return db.Select("id", "username", "email", "bio", "avatar_url")
 		}).
 		Preload("Comments").
 		Preload("LikesandDislikes").
@@ -56,7 +67,7 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 		})
 	}
 	newPost.UserID = userID
-	if newPost.Title == "" || newPost.Content == "" || newPost.Category == "" {
+	if newPost.Title == "" || newPost.Content == "" || newPost.Category == "" || newPost.Description == "" {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"message": "Invalid Post data",
 		})
@@ -93,6 +104,7 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 	image := fmt.Sprintf("%s%s", fileName, fileExt)
 	uploadDir := "./uploads"
 	uploadPath := fmt.Sprintf("%s/%s", uploadDir, image)
+	imageUrl := fmt.Sprintf("http://localhost:8000/uploads/%s", image)
 
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
@@ -102,6 +114,7 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 	}
 
 	newPost.FeaturedImage = image
+	newPost.FeaturedImageUrl = imageUrl
 	newPost.ViewCount = 0
 	newPost.Status = "draft"
 

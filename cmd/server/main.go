@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com-Personal/go-fiber/config"
@@ -13,6 +14,7 @@ import (
 func main() {
 	// Load configuration
 	cfg := config.Load()
+	fmt.Println(cfg.SERVER_URL)
 
 	// Connect to the database
 	db, err := database.Connect(cfg.DatabaseURL)
@@ -29,6 +31,7 @@ func main() {
 	postHandler := handlers.NewPostHandler(db)
 	commentHandler := handlers.NewCommentHandler(db)
 	likes_and_dislikes := handlers.NewLikesandDislikes(db)
+	bookmarkHandler := handlers.NewBookmarkHandler(db)
 
 	// Public routes
 	router.Post("/login", userHandler.Login)
@@ -39,7 +42,8 @@ func main() {
 
 	// User routes
 	users := api.Group("/users")
-	users.Get("/:id", userHandler.GetProfile)
+	users.Get("/", userHandler.GetProfile)
+	users.Get("/uploads/avatars/:filename", userHandler.GetAvatarImage)
 	users.Put("/:id", userHandler.UpdateProfile)
 	users.Post("/:id/avatar", userHandler.UploadAvatar)
 	users.Post("/:followerID/follow/:followingID", userHandler.FollowUser)
@@ -49,11 +53,15 @@ func main() {
 
 	// Post routes
 	api.Get("/posts", postHandler.GetPosts)
+	api.Get("/uploads/:filename", postHandler.GetImage)
 	api.Post("/posts", postHandler.NewPost)
 	api.Get("posts/:username/:slug", postHandler.GetPostBySlug)
 	api.Put("/posts/:id", postHandler.UpdatePost)
 	api.Delete("/posts/:id", postHandler.DeletePost)
 	api.Get("/users/:id/posts", postHandler.GetPostsByUser)
+
+	api.Post("/users/:post_id/bookmark", bookmarkHandler.BookmarkPost)
+	api.Get("/:post_id/bookmarkscount", bookmarkHandler.GetBookmarkCount)
 
 	// Comment routes
 	api.Post("/posts/:id/comments", commentHandler.AddComment)
@@ -65,5 +73,5 @@ func main() {
 	api.Delete("/posts/:id/reactions", likes_and_dislikes.RemoveReaction)
 
 	// Start the server
-	log.Fatal(router.Listen(":" + cfg.PORT))
+	log.Fatal(router.Listen(cfg.SERVER_URL))
 }
