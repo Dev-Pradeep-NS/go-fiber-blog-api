@@ -250,8 +250,7 @@ func (h *PostHandler) GetPostBySlug(c *fiber.Ctx) error {
 		Preload("User", func(db *gorm.DB) *gorm.DB {
 			return db.Select("id", "username", "email")
 		}).
-		Preload("Comments").
-		Preload("LikesandDislikes").
+		Preload("User").
 		Joins("JOIN users ON posts.user_id = users.id").
 		Where("users.username = ? AND posts.slug = ?", username, slug).
 		First(&post)
@@ -274,7 +273,5 @@ func (h *PostHandler) GetPostBySlug(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"Post": post,
-	})
+	return c.Status(fiber.StatusOK).JSON(post)
 }

@@ -87,3 +87,20 @@ func (h *BookmarkHandler) GetBookmarkCount(c *fiber.Ctx) error {
 		"BookmarkedPostCount": count,
 	})
 }
+
+func (h *BookmarkHandler) GetBookmarks(c *fiber.Ctx) error {
+	userID, ok := c.Locals("user_id").(uint)
+	if !ok {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "unauthotized user",
+		})
+	}
+
+	var bookmarks []models.Bookmark
+	result := h.DB.Where("user_id = ?", userID).Find(&bookmarks)
+	if result.Error != nil {
+		return c.Status(fiber.StatusNotFound).JSON(result.Error.Error())
+	}
+
+	return c.Status(fiber.StatusOK).JSON(bookmarks)
+}

@@ -32,7 +32,10 @@ type Comment struct {
 	ID        uint           `json:"id" gorm:"primaryKey"`
 	Comment   string         `json:"comment" gorm:"not null"`
 	UserID    uint           `json:"user_id" gorm:"not null"`
+	Username  string         `json:"username" gorm:"not null"`
 	PostID    uint           `json:"post_id" gorm:"not null"`
+	ParentID  *uint          `json:"parent_id" gorm:"default:null"`
+	Replies   []Comment      `json:"replies" gorm:"foreignKey:ParentID"`
 	CreatedAt time.Time      `json:"created_at"`
 	DeletedAt gorm.DeletedAt `json:"deleted_at" gorm:"index"`
 }

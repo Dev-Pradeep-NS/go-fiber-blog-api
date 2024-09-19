@@ -25,6 +25,10 @@ func main() {
 	// Initialize Fiber router
 	router := fiber.New()
 	router.Use(middleware.CorsMiddleware())
+	router.Use(func(c *fiber.Ctx) error {
+		log.Printf("Received request: %s %s", c.Method(), c.Path())
+		return c.Next()
+	})
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(db)
@@ -36,6 +40,7 @@ func main() {
 	// Public routes
 	router.Post("/login", userHandler.Login)
 	router.Post("/register", userHandler.Register)
+	router.Post("/refresh", userHandler.RefreshToken)
 
 	// Protected routes group
 	api := router.Group("/", middleware.AuthMiddleware())
@@ -51,6 +56,17 @@ func main() {
 	users.Get("/:id/followers", userHandler.GetFollowers)
 	users.Get("/:id/following", userHandler.GetFollowing)
 
+	// Reaction routes
+	api.Post("/posts/:id/like", likes_and_dislikes.LikePost)
+	api.Post("/posts/:id/dislike", likes_and_dislikes.DisLikePost)
+	api.Get("/posts/:post_id/reactions", likes_and_dislikes.GetReaction)
+
+	// Comment routes
+	api.Post("/posts/:id/comments", commentHandler.AddComment)
+	api.Get("/posts/:id/comments", commentHandler.GetCommentsandCount)
+	api.Put("/comments/:id", commentHandler.UpdateComment)
+	api.Delete("/comments/:id", commentHandler.DeleteComment)
+
 	// Post routes
 	api.Get("/posts", postHandler.GetPosts)
 	api.Get("/uploads/:filename", postHandler.GetImage)
@@ -61,16 +77,8 @@ func main() {
 	api.Get("/users/:id/posts", postHandler.GetPostsByUser)
 
 	api.Post("/users/:post_id/bookmark", bookmarkHandler.BookmarkPost)
+	api.Get("/users/bookmarks", bookmarkHandler.GetBookmarks)
 	api.Get("/:post_id/bookmarkscount", bookmarkHandler.GetBookmarkCount)
-
-	// Comment routes
-	api.Post("/posts/:id/comments", commentHandler.AddComment)
-	api.Put("/comments/:id", commentHandler.UpdateComment)
-	api.Delete("/comments/:id", commentHandler.DeleteComment)
-
-	// Reaction routes
-	api.Post("/posts/:id/reactions", likes_and_dislikes.AddReaction)
-	api.Delete("/posts/:id/reactions", likes_and_dislikes.RemoveReaction)
 
 	// Start the server
 	log.Fatal(router.Listen(cfg.SERVER_URL))

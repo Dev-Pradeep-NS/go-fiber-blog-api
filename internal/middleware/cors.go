@@ -8,7 +8,7 @@ import (
 func CorsMiddleware() fiber.Handler {
 	return cors.New(cors.Config{
 		AllowMethods:     "GET,POST,HEAD,PUT,DELETE,PATCH",
-		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization, Refresh-Token",
 		AllowCredentials: true,
 		AllowOriginsFunc: func(origin string) bool {
 			allowedOrigins := []string{

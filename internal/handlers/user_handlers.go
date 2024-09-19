@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com-Personal/go-fiber/internal/models"
+	"github.com-Personal/go-fiber/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
@@ -134,17 +135,18 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		})
 	}
 
-	claims := jwt.MapClaims{
-		"user_id":  user.ID,
-		"username": user.Username,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(),
-	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
-	t, err := token.SignedString(secretKey)
+	accessToken, err := generateToken(user.ID, user.Username, time.Hour)
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to generate token",
+			"message": "Failed to generate access token",
+			"error":   err.Error(),
+		})
+	}
+
+	refreshToken, err := generateToken(user.ID, user.Username, time.Hour*24*7)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to generate refresh token",
 			"error":   err.Error(),
 		})
 	}
@@ -158,9 +160,52 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		CreatedAt: user.CreatedAt,
 	}
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
-		"message": "Login successful",
-		"token":   t,
-		"user":    safeUser,
+		"message":       "Login successful",
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
+		"user":          safeUser,
+	})
+}
+
+func generateToken(userID uint, username string, expiration time.Duration) (string, error) {
+	claims := jwt.MapClaims{
+		"user_id":  userID,
+		"username": username,
+		"exp":      time.Now().Add(expiration).Unix(),
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	secretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
+	return token.SignedString(secretKey)
+}
+
+func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
+	refreshToken := c.Get("Refresh-Token")
+	if refreshToken == "" {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Missing refresh token",
+		})
+	}
+
+	claims, err := utils.ValidateToken(refreshToken)
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid or expired refresh token",
+		})
+	}
+
+	userID := uint(claims["user_id"].(float64))
+	username := claims["username"].(string)
+
+	newAccessToken, err := generateToken(userID, username, time.Hour)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to generate new access token",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"access_token": newAccessToken,
 	})
 }
 
