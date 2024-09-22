@@ -27,8 +27,10 @@ func main() {
 	router.Use(middleware.CorsMiddleware())
 	router.Use(func(c *fiber.Ctx) error {
 		log.Printf("Received request: %s %s", c.Method(), c.Path())
-		return c.Next()
-	})
+		err := c.Next()
+		log.Printf("Responded with status: %d", c.Response().StatusCode())
+		return err
+	})	
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(db)

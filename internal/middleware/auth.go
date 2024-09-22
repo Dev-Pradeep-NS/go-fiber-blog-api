@@ -12,6 +12,10 @@ func AuthMiddleware() fiber.Handler {
 		accessToken := strings.TrimPrefix(c.Get("Authorization"), "Bearer ")
 
 		if accessToken == "" {
+			accessToken = c.Query("token", "")
+		}
+
+		if accessToken == "" {
 			return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 				"message": "Missing access token",
 			})

@@ -102,9 +102,27 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		CreatedAt: newUser.CreatedAt,
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
-		"message": "User registered successfully",
-		"user":    safeUser,
+	accessToken, err := generateToken(newUser.ID, newUser.Username, time.Hour)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to generate access token",
+			"error":   err.Error(),
+		})
+	}
+
+	refreshToken, err := generateToken(newUser.ID, newUser.Username, time.Hour*24*7)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to generate refresh token",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message":       "User registered successfully",
+		"user":          safeUser,
+		"access_token":  accessToken,
+		"refresh_token": refreshToken,
 	})
 }
 
@@ -179,7 +197,8 @@ func generateToken(userID uint, username string, expiration time.Duration) (stri
 }
 
 func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
-	refreshToken := c.Get("Refresh-Token")
+	refreshToken := c.Cookies("refresh_token")
+	log.Printf("Received refresh token: %s", refreshToken)
 	if refreshToken == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Missing refresh token",
