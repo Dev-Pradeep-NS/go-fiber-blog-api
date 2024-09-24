@@ -118,6 +118,17 @@ func (h *UserHandler) Register(c *fiber.Ctx) error {
 		})
 	}
 
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(time.Hour * 24 * 7),
+		Secure:   false,
+		Path:     "/",
+		HTTPOnly: true,
+		SameSite: "Strict",
+		Domain:   "localhost",
+	})
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message":       "User registered successfully",
 		"user":          safeUser,
@@ -177,12 +188,37 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 		AvatarURL: user.AvatarURL,
 		CreatedAt: user.CreatedAt,
 	}
+
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    refreshToken,
+		Expires:  time.Now().Add(time.Hour * 24 * 7),
+		Secure:   false,
+		Path:     "/",
+		HTTPOnly: true,
+		SameSite: "Strict",
+		Domain:   "localhost",
+	})
+
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"message":       "Login successful",
 		"access_token":  accessToken,
 		"refresh_token": refreshToken,
 		"user":          safeUser,
 	})
+}
+
+func (h *UserHandler) Logout(c *fiber.Ctx) error {
+	c.Cookie(&fiber.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		Expires:  time.Now().Add(-time.Hour),
+		Secure:   false,
+		Path:     "/",
+		HTTPOnly: true,
+		SameSite: "Strict",
+	})
+	return c.SendStatus(fiber.StatusOK)
 }
 
 func generateToken(userID uint, username string, expiration time.Duration) (string, error) {

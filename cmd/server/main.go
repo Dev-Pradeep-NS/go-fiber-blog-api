@@ -30,7 +30,7 @@ func main() {
 		err := c.Next()
 		log.Printf("Responded with status: %d", c.Response().StatusCode())
 		return err
-	})	
+	})
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(db)
@@ -43,6 +43,7 @@ func main() {
 	router.Post("/login", userHandler.Login)
 	router.Post("/register", userHandler.Register)
 	router.Post("/refresh", userHandler.RefreshToken)
+	router.Post("/logout", userHandler.Logout)
 
 	// Protected routes group
 	api := router.Group("/", middleware.AuthMiddleware())
