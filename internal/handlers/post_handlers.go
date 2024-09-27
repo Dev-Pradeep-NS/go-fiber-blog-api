@@ -36,7 +36,7 @@ func (h *PostHandler) GetPosts(c *fiber.Ctx) error {
 	var posts []models.Post
 	result := h.DB.
 		Preload("User", func(db *gorm.DB) *gorm.DB {
-			return db.Select("id", "username", "email", "bio", "avatar_url")
+			return db.Select("id", "username", "email", "bio", "avatar_url", "created_at")
 		}).
 		Preload("Comments").
 		Preload("LikesandDislikes").

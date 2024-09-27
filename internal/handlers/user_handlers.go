@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -208,6 +209,100 @@ func (h *UserHandler) Login(c *fiber.Ctx) error {
 	})
 }
 
+func (h *UserHandler) CheckEmail(c *fiber.Ctx) error {
+	email := c.Params("email")
+	fmt.Println(email)
+
+	var user models.User
+	result := h.DB.Where("email = ?", email).First(&user)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "Email not found",
+			})
+		}
+		// Handle any other database errors
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Internal Server Error",
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Email found",
+	})
+}
+
+func (h *UserHandler) ForgotPassword(c *fiber.Ctx) error {
+	var data struct {
+		Email       string `json:"email"`
+		OldPassword string `json:"oldPassword"`
+		NewPassword string `json:"newPassword"`
+	}
+
+	if err := c.BodyParser(&data); err != nil {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Unable to parse request body",
+			"error":   err.Error(),
+		})
+	}
+
+	// Validate input
+	if data.Email == "" || data.OldPassword == "" || data.NewPassword == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "Email, old password, and new password are required",
+		})
+	}
+
+	var user models.User
+	result := h.DB.Where("email = ?", data.Email).First(&user)
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"message": "User not found",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Database error",
+			"error":   result.Error.Error(),
+		})
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(data.OldPassword))
+	if err != nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"message": "Invalid old password",
+		})
+	}
+
+	// Check if new password is different from old password
+	if data.OldPassword == data.NewPassword {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"message": "New password must be different from old password",
+		})
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(data.NewPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to hash password",
+			"error":   err.Error(),
+		})
+	}
+
+	user.Password = string(hashedPassword)
+	if err := h.DB.Save(&user).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Failed to update password",
+			"error":   err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"message": "Password reset successful",
+	})
+}
+
 func (h *UserHandler) Logout(c *fiber.Ctx) error {
 	c.Cookie(&fiber.Cookie{
 		Name:     "refresh_token",
@@ -238,6 +333,7 @@ func (h *UserHandler) RefreshToken(c *fiber.Ctx) error {
 	if refreshToken == "" {
 		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
 			"message": "Missing refresh token",
+			"error":   "No refresh token",
 		})
 	}
 
@@ -289,6 +385,17 @@ func (h *UserHandler) GetProfile(c *fiber.Ctx) error {
 	}
 
 	return c.Status(fiber.StatusOK).JSON(safeUser)
+}
+
+func (h *UserHandler) GetUserDetail(c *fiber.Ctx) error {
+	username := c.Params("username")
+	var user models.User
+	if err := h.DB.Where("username = ?", username).Find(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"message": "User not found",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(user)
 }
 
 func (h *UserHandler) UpdateProfile(c *fiber.Ctx) error {
@@ -422,7 +529,7 @@ func (h *UserHandler) UploadAvatar(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) FollowUser(c *fiber.Ctx) error {
-	followerID := c.Params("followerID")
+	followerID := c.Locals("user_id").(uint)
 	followingID := c.Params("followingID")
 
 	var follower, following models.User
@@ -450,7 +557,7 @@ func (h *UserHandler) FollowUser(c *fiber.Ctx) error {
 }
 
 func (h *UserHandler) UnfollowUser(c *fiber.Ctx) error {
-	followerID := c.Params("followerID")
+	followerID := c.Locals("user_id").(uint)
 	followingID := c.Params("followingID")
 
 	var follower, following models.User
@@ -487,6 +594,8 @@ func (h *UserHandler) GetFollowers(c *fiber.Ctx) error {
 		})
 	}
 
+	fmt.Println(user)
+
 	var safeFollowers []SafeUser
 	for _, follower := range user.Followers {
 		safeFollowers = append(safeFollowers, SafeUser{
@@ -513,6 +622,8 @@ func (h *UserHandler) GetFollowing(c *fiber.Ctx) error {
 			"message": "User not found",
 		})
 	}
+
+	fmt.Println(user)
 
 	var safeFollowing []SafeUser
 	for _, following := range user.Following {

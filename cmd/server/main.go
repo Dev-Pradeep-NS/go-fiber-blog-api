@@ -44,18 +44,21 @@ func main() {
 	router.Post("/register", userHandler.Register)
 	router.Post("/refresh", userHandler.RefreshToken)
 	router.Post("/logout", userHandler.Logout)
+	router.Get("/verifyemail/:email", userHandler.CheckEmail)
+	router.Put("/reset-password", userHandler.ForgotPassword)
 
 	// Protected routes group
 	api := router.Group("/", middleware.AuthMiddleware())
 
 	// User routes
 	users := api.Group("/users")
-	users.Get("/", userHandler.GetProfile)
+	users.Get("", userHandler.GetProfile)
+	users.Get("/:username", userHandler.GetUserDetail)
 	users.Get("/uploads/avatars/:filename", userHandler.GetAvatarImage)
 	users.Put("/:id", userHandler.UpdateProfile)
 	users.Post("/:id/avatar", userHandler.UploadAvatar)
-	users.Post("/:followerID/follow/:followingID", userHandler.FollowUser)
-	users.Delete("/:followerID/unfollow/:followingID", userHandler.UnfollowUser)
+	users.Post("/follow/:followingID", userHandler.FollowUser)
+	users.Delete("/unfollow/:followingID", userHandler.UnfollowUser)
 	users.Get("/:id/followers", userHandler.GetFollowers)
 	users.Get("/:id/following", userHandler.GetFollowing)
 
@@ -80,7 +83,7 @@ func main() {
 	api.Get("/users/:id/posts", postHandler.GetPostsByUser)
 
 	api.Post("/users/:post_id/bookmark", bookmarkHandler.BookmarkPost)
-	api.Get("/users/bookmarks", bookmarkHandler.GetBookmarks)
+	api.Get("/users/post/bookmarks", bookmarkHandler.GetBookmarks)
 	api.Get("/:post_id/bookmarkscount", bookmarkHandler.GetBookmarkCount)
 
 	// Start the server
