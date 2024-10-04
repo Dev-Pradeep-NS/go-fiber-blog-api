@@ -116,14 +116,18 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 	newPost.FeaturedImage = image
 	newPost.FeaturedImageUrl = imageUrl
 	newPost.ViewCount = 0
-	newPost.Status = "draft"
 
+	var user models.User
 	err = h.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(newPost).Error; err != nil {
 			return err
 		}
 
 		if err := c.SaveFile(file, uploadPath); err != nil {
+			return err
+		}
+
+		if err := tx.First(&user, userID).Error; err != nil {
 			return err
 		}
 
@@ -137,7 +141,17 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 		})
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(newPost)
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
+		"post": newPost,
+		"user": fiber.Map{
+			"id":         user.ID,
+			"username":   user.Username,
+			"email":      user.Email,
+			"bio":        user.Bio,
+			"avatar_url": user.AvatarURL,
+			"created_at": user.CreatedAt,
+		},
+	})
 }
 
 func (h *PostHandler) UpdatePost(c *fiber.Ctx) error {

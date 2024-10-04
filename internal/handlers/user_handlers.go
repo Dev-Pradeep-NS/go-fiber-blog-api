@@ -233,6 +233,22 @@ func (h *UserHandler) CheckEmail(c *fiber.Ctx) error {
 	})
 }
 
+func (h *UserHandler) GetAllUsernameAndEmails(c *fiber.Ctx) error {
+
+	var users []struct {
+		Email    string
+		Username string
+	}
+	if result := h.DB.Model(models.User{}).Select("email, username").Find(&users); result.Error != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"message": "Unable to fetch emails and usernames",
+		})
+	}
+	return c.Status(fiber.StatusOK).JSON(fiber.Map{
+		"Users": users,
+	})
+}
+
 func (h *UserHandler) ForgotPassword(c *fiber.Ctx) error {
 	var data struct {
 		Email       string `json:"email"`

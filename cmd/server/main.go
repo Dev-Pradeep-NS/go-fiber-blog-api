@@ -38,6 +38,7 @@ func main() {
 	commentHandler := handlers.NewCommentHandler(db)
 	likes_and_dislikes := handlers.NewLikesandDislikes(db)
 	bookmarkHandler := handlers.NewBookmarkHandler(db)
+	contactHandler := handlers.NewContactHandlers(db)
 
 	// Public routes
 	router.Post("/login", userHandler.Login)
@@ -61,6 +62,7 @@ func main() {
 	users.Delete("/unfollow/:followingID", userHandler.UnfollowUser)
 	users.Get("/:id/followers", userHandler.GetFollowers)
 	users.Get("/:id/following", userHandler.GetFollowing)
+	api.Get("/users-emails", userHandler.GetAllUsernameAndEmails)
 
 	// Reaction routes
 	api.Post("/posts/:id/like", likes_and_dislikes.LikePost)
@@ -85,6 +87,9 @@ func main() {
 	api.Post("/users/:post_id/bookmark", bookmarkHandler.BookmarkPost)
 	api.Get("/users/post/bookmarks", bookmarkHandler.GetBookmarks)
 	api.Get("/:post_id/bookmarkscount", bookmarkHandler.GetBookmarkCount)
+
+	// Contact routes
+	api.Post("/contact-us", contactHandler.PostContact)
 
 	// Start the server
 	log.Fatal(router.Listen(cfg.SERVER_URL))
