@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com-Personal/go-fiber/config"
 	"github.com-Personal/go-fiber/internal/models"
 	"github.com-Personal/go-fiber/internal/utils"
 	"github.com/gofiber/fiber/v2"
@@ -511,7 +512,8 @@ func (h *UserHandler) UploadAvatar(c *fiber.Ctx) error {
 	image := fmt.Sprintf("%s%s", fileName, fileExt)
 	uploadDir := "./uploads/avatars"
 	uploadPath := fmt.Sprintf("%s/%s", uploadDir, image)
-	imageUrl := fmt.Sprintf("http://localhost:8000/uploads/avatars/%s", image)
+	server_url := config.Load().SERVER_URL
+	imageUrl := fmt.Sprintf("%s/uploads/avatars/%s", server_url, image)
 
 	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
