@@ -612,8 +612,6 @@ func (h *UserHandler) GetFollowers(c *fiber.Ctx) error {
 		})
 	}
 
-	fmt.Println(user)
-
 	var safeFollowers []SafeUser
 	for _, follower := range user.Followers {
 		safeFollowers = append(safeFollowers, SafeUser{
@@ -640,8 +638,6 @@ func (h *UserHandler) GetFollowing(c *fiber.Ctx) error {
 			"message": "User not found",
 		})
 	}
-
-	fmt.Println(user)
 
 	var safeFollowing []SafeUser
 	for _, following := range user.Following {

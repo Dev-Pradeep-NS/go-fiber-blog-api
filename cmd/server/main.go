@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 
 	"github.com-Personal/go-fiber/config"
@@ -9,12 +8,12 @@ import (
 	"github.com-Personal/go-fiber/internal/handlers"
 	"github.com-Personal/go-fiber/internal/middleware"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func main() {
 	// Load configuration
 	cfg := config.Load()
-	fmt.Println(cfg.SERVER_URL)
 
 	// Connect to the database
 	db, err := database.Connect(cfg.DatabaseURL)
@@ -25,12 +24,7 @@ func main() {
 	// Initialize Fiber router
 	router := fiber.New()
 	router.Use(middleware.CorsMiddleware())
-	router.Use(func(c *fiber.Ctx) error {
-		log.Printf("Received request: %s %s", c.Method(), c.Path())
-		err := c.Next()
-		log.Printf("Responded with status: %d", c.Response().StatusCode())
-		return err
-	})
+	router.Use(logger.New())
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(db)
@@ -92,5 +86,5 @@ func main() {
 	api.Post("/contact-us", contactHandler.PostContact)
 
 	// Start the server
-	log.Fatal(router.Listen(cfg.SERVER_URL))
+	log.Fatal(router.Listen(cfg.HOST + ":" + cfg.PORT))
 }
