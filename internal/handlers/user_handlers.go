@@ -6,15 +6,12 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 	"time"
 
-	"github.com-Personal/go-fiber/config"
 	"github.com-Personal/go-fiber/internal/models"
 	"github.com-Personal/go-fiber/internal/utils"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -491,48 +488,16 @@ func (h *UserHandler) UploadAvatar(c *fiber.Ctx) error {
 		})
 	}
 
-	file, err := c.FormFile("avatar")
+	imageURL, _, err := utils.UploadFileToFirebaseAndGetURL(c, "avatar", "avatars")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "No file uploaded",
-			"error":   err.Error(),
-		})
-	}
-
-	uniqueID := uuid.New()
-	fileName := strings.Replace(uniqueID.String(), "-", "", -1)
-	fileExt := strings.ToLower(filepath.Ext(file.Filename))
-
-	if fileExt != ".jpg" && fileExt != ".jpeg" && fileExt != ".png" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid file type. Only JPG, JPEG, and PNG are allowed",
-		})
-	}
-
-	image := fmt.Sprintf("%s%s", fileName, fileExt)
-	uploadDir := "./uploads/avatars"
-	uploadPath := fmt.Sprintf("%s/%s", uploadDir, image)
-	server_url := config.Load().SERVER_URL
-	imageUrl := fmt.Sprintf("%s/uploads/avatars/%s", server_url, image)
-
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create upload directory",
+			"message": "Failed to upload avatar",
 			"error":   err.Error(),
 		})
 	}
 
-	user.AvatarURL = imageUrl
+	user.AvatarURL = imageURL
 
-	// Save the file
-	if err := c.SaveFile(file, uploadPath); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to save file",
-			"error":   err.Error(),
-		})
-	}
-
-	// Update the user's avatar URL in the database
 	if err := h.DB.Save(&user).Error; err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to update avatar URL",

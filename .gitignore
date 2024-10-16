@@ -44,3 +44,6 @@ pgdata/
 
 # Any other project-specific files or directories you want to ignore
 uploads
+
+# Firebase key
+serviceAccountKey.json

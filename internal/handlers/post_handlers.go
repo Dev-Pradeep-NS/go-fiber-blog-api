@@ -1,16 +1,13 @@
 package handlers
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
-	"github.com-Personal/go-fiber/config"
 	"github.com-Personal/go-fiber/internal/models"
 	"github.com-Personal/go-fiber/internal/utils"
 	"github.com/gofiber/fiber/v2"
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -84,48 +81,22 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 
 	newPost.Slug = utils.CreateSlug(newPost.Title)
 
-	file, err := c.FormFile("image")
+	imageURL, fileName, err := utils.UploadFileToFirebaseAndGetURL(c, "image", "uploads")
 	if err != nil {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to upload image",
 			"error":   err.Error(),
 		})
 	}
 
-	uniqueID := uuid.New()
-	fileName := strings.Replace(uniqueID.String(), "-", "", -1)
-	fileExt := strings.ToLower(filepath.Ext(file.Filename))
+	newPost.FeaturedImage = fileName
+	newPost.FeaturedImageUrl = imageURL
 
-	if fileExt != ".jpg" && fileExt != ".jpeg" && fileExt != ".png" {
-		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
-			"message": "Invalid file type. Only JPG, JPEG, and PNG are allowed",
-		})
-	}
-
-	image := fmt.Sprintf("%s%s", fileName, fileExt)
-	uploadDir := "./uploads"
-	uploadPath := fmt.Sprintf("%s/%s", uploadDir, image)
-	server_url := config.Load().SERVER_URL
-	imageUrl := fmt.Sprintf("%s/uploads/%s", server_url, image)
-
-	if err := os.MkdirAll(uploadDir, 0755); err != nil {
-		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
-			"message": "Failed to create upload directory",
-			"error":   err.Error(),
-		})
-	}
-
-	newPost.FeaturedImage = image
-	newPost.FeaturedImageUrl = imageUrl
 	newPost.ViewCount = 0
 
 	var user models.User
 	err = h.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(newPost).Error; err != nil {
-			return err
-		}
-
-		if err := c.SaveFile(file, uploadPath); err != nil {
 			return err
 		}
 

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com-Personal/go-fiber/config"
@@ -20,6 +21,13 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to connect database: %v", err)
 	}
+
+	// Initialize Firebase
+	_, _, err = config.InitializeFirebaseApp()
+	if err != nil {
+		log.Fatalf("Error initializing Firebase: %v", err) // Ensure the app terminates on error
+	}
+	fmt.Println("Firebase Auth client initialized successfully.")
 
 	// Initialize Fiber router
 	router := fiber.New()
