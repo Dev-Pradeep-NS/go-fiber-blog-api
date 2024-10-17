@@ -26,12 +26,10 @@ func UploadFileToFirebase(bucket *storage.BucketHandle, file io.Reader, uploadPa
 		return "", err
 	}
 
-	// Make the file public
 	if err := obj.ACL().Set(ctx, storage.AllUsers, storage.RoleReader); err != nil {
 		return "", err
 	}
 
-	// Get the public URL
 	attrs, err := obj.Attrs(ctx)
 	if err != nil {
 		return "", err
