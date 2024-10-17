@@ -3,6 +3,9 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com-Personal/go-fiber/config"
 	"github.com-Personal/go-fiber/internal/database"
@@ -25,7 +28,7 @@ func main() {
 	// Initialize Firebase
 	_, _, err = config.InitializeFirebaseApp()
 	if err != nil {
-		log.Fatalf("Error initializing Firebase: %v", err) // Ensure the app terminates on error
+		log.Fatalf("Error initializing Firebase: %v", err)
 	}
 	fmt.Println("Firebase Auth client initialized successfully.")
 
@@ -33,6 +36,9 @@ func main() {
 	router := fiber.New()
 	router.Use(middleware.CorsMiddleware())
 	router.Use(logger.New())
+
+	// Health check routes
+	router.Use(middleware.HealthCheckMiddleware())
 
 	// Initialize handlers
 	userHandler := handlers.NewUserHandler(db)
@@ -94,5 +100,21 @@ func main() {
 	api.Post("/contact-us", contactHandler.PostContact)
 
 	// Start the server
-	log.Fatal(router.Listen(cfg.HOST + ":" + cfg.PORT))
+	go func() {
+		if err := router.Listen(cfg.HOST + ":" + cfg.PORT); err != nil {
+			log.Fatalf("Error starting the server: %v", err)
+		}
+	}()
+
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("Shutting down the server...")
+
+	// Shutdown the server
+	if err := router.Shutdown(); err != nil {
+		log.Fatalf("Could not shutdown server: %v", err)
+	}
 }
