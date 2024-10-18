@@ -1,5 +1,26 @@
-version: '3'
+version: '3.8'  # Use a more recent version
+
 services:
+  app:
+    build:
+      context: .  # Specifies the build context
+    container_name: go-fiber-app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app  # Ensures source code is updated in the container for hot-reloading
+      - air_data:/tmp  # Volume for Air's internal use (e.g., build cache)
+    depends_on:
+      - postgres
+    command: ["air", "-c", ".air.toml"]  # Ensures Air is used for live reloading
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]  # Adjust the endpoint as necessary
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   postgres:
     image: "postgres:${POSTGRES_VERSION}"
     ports:
@@ -11,6 +32,12 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     restart: always
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 volumes:
   pgdata:
+  air_data:

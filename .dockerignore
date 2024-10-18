@@ -1,0 +1,17 @@
+# Ignore the vendor directory
+/vendor/
+
+# Ignore the build artifacts
+/tmp/
+*.log
+
+# Ignore IDE files
+.idea/
+.vscode/
+
+# Ignore binaries
+main
+
+# Ignore sensitive files (do not copy to the container)
+.env
+serviceAccountKey.json
