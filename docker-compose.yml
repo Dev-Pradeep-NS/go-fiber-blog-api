@@ -7,8 +7,6 @@ services:
     container_name: go-fiber-app
     ports:
       - "8000:8000"
-    env_file:
-      - .env
     volumes:
       - .:/app
       - air_data:/tmp
@@ -20,24 +18,112 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    environment:
+      POSTGRES_USER: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB: /run/secrets/POSTGRES_DB
+      SERVER_HOST: /run/secrets/SERVER_HOST
+      PORT: /run/secrets/PORT
+      JWT_SECRET_KEY: /run/secrets/JWT_SECRET_KEY
+      POSTGRES_VERSION: /run/secrets/POSTGRES_VERSION
+      DATABASE_URL: /run/secrets/DATABASE_URL
+      BUCKET_NAME: /run/secrets/BUCKET_NAME
+      FIREBASE_TYPE: /run/secrets/FIREBASE_TYPE
+      FIREBASE_PROJECT_ID: /run/secrets/FIREBASE_PROJECT_ID
+      FIREBASE_PRIVATE_KEY_ID: /run/secrets/FIREBASE_PRIVATE_KEY_ID
+      FIREBASE_PRIVATE_KEY: /run/secrets/FIREBASE_PRIVATE_KEY
+      FIREBASE_CLIENT_EMAIL: /run/secrets/FIREBASE_CLIENT_EMAIL
+      FIREBASE_CLIENT_ID: /run/secrets/FIREBASE_CLIENT_ID
+      FIREBASE_AUTH_URI: /run/secrets/FIREBASE_AUTH_URI
+      FIREBASE_TOKEN_URI: /run/secrets/FIREBASE_TOKEN_URI
+      FIREBASE_AUTH_PROVIDER_X509_CERT_URL: /run/secrets/FIREBASE_AUTH_PROVIDER_X509_CERT_URL
+      FIREBASE_CLIENT_X509_CERT_URL: /run/secrets/FIREBASE_CLIENT_X509_CERT_URL
+      FIREBASE_UNIVERSE_DOMAIN: /run/secrets/FIREBASE_UNIVERSE_DOMAIN
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+      - SERVER_HOST
+      - PORT
+      - JWT_SECRET_KEY
+      - POSTGRES_VERSION
+      - DATABASE_URL
+      - BUCKET_NAME
+      - FIREBASE_TYPE
+      - FIREBASE_PROJECT_ID
+      - FIREBASE_PRIVATE_KEY_ID
+      - FIREBASE_PRIVATE_KEY
+      - FIREBASE_CLIENT_EMAIL
+      - FIREBASE_CLIENT_ID
+      - FIREBASE_AUTH_URI
+      - FIREBASE_TOKEN_URI
+      - FIREBASE_AUTH_PROVIDER_X509_CERT_URL
+      - FIREBASE_CLIENT_X509_CERT_URL
+      - FIREBASE_UNIVERSE_DOMAIN
 
   postgres:
-    image: "postgres:${POSTGRES_VERSION}"
+    image: "postgres:latest"
     ports:
       - "54320:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: /run/secrets/POSTGRES_USER
+      POSTGRES_PASSWORD: /run/secrets/POSTGRES_PASSWORD
+      POSTGRES_DB: /run/secrets/POSTGRES_DB
     restart: always
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      test: ["CMD-SHELL", "pg_isready -U $(cat /run/secrets/POSTGRES_USER)"]
       interval: 30s
       timeout: 10s
       retries: 5
+    secrets:
+      - POSTGRES_USER
+      - POSTGRES_PASSWORD
+      - POSTGRES_DB
+
+secrets:
+  POSTGRES_USER:
+    file: ./secrets.txt
+  POSTGRES_PASSWORD:
+    file: ./secrets.txt
+  POSTGRES_DB:
+    file: ./secrets.txt
+  SERVER_HOST:
+    file: ./secrets.txt
+  PORT:
+    file: ./secrets.txt
+  JWT_SECRET_KEY:
+    file: ./secrets.txt
+  POSTGRES_VERSION:
+    file: ./secrets.txt
+  DATABASE_URL:
+    file: ./secrets.txt
+  BUCKET_NAME:
+    file: ./secrets.txt
+  FIREBASE_TYPE:
+    file: ./secrets.txt
+  FIREBASE_PROJECT_ID:
+    file: ./secrets.txt
+  FIREBASE_PRIVATE_KEY_ID:
+    file: ./secrets.txt
+  FIREBASE_PRIVATE_KEY:
+    file: ./secrets.txt
+  FIREBASE_CLIENT_EMAIL:
+    file: ./secrets.txt
+  FIREBASE_CLIENT_ID:
+    file: ./secrets.txt
+  FIREBASE_AUTH_URI:
+    file: ./secrets.txt
+  FIREBASE_TOKEN_URI:
+    file: ./secrets.txt
+  FIREBASE_AUTH_PROVIDER_X509_CERT_URL:
+    file: ./secrets.txt
+  FIREBASE_CLIENT_X509_CERT_URL:
+    file: ./secrets.txt
+  FIREBASE_UNIVERSE_DOMAIN:
+    file: ./secrets.txt
 
 volumes:
   pgdata:

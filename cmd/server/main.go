@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com-Personal/go-fiber/config"
+	"github.com-Personal/go-fiber/config/firebase_config"
 	"github.com-Personal/go-fiber/internal/database"
 	"github.com-Personal/go-fiber/internal/handlers"
 	"github.com-Personal/go-fiber/internal/middleware"
@@ -17,7 +18,10 @@ import (
 
 func main() {
 	// Load configuration
-	cfg := config.Load()
+	cfg, err := config.Load()
+	if err != nil {
+		log.Fatalf("Failed to load configurations: %v", err)
+	}
 
 	// Connect to the database
 	db, err := database.Connect(cfg.DatabaseURL)
@@ -26,7 +30,7 @@ func main() {
 	}
 
 	// Initialize Firebase
-	_, _, err = config.InitializeFirebaseApp()
+	_, _, err = firebase_config.InitializeFirebaseApp()
 	if err != nil {
 		log.Fatalf("Error initializing Firebase: %v", err)
 	}

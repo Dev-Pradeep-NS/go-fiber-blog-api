@@ -1,9 +1,11 @@
 package config
 
 import (
+	"errors"
 	"log"
 	"os"
 
+	"github.com-Personal/go-fiber/internal/utils"
 	"github.com/joho/godotenv"
 )
 
@@ -13,26 +15,31 @@ type Config struct {
 	HOST        string
 }
 
-func Load() *Config {
+// Load will load configuration from .env and Docker secrets.
+func Load() (*Config, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("Warning: .env file not found. Using default values or environment variables.")
 	}
 
-	databaseUrl := getEnv("DATABASE_URL", "postgres://postgres:postgres@localhost:5432/postgres")
-	port := getEnv("PORT", "8080")
-	host := getEnv("SERVER_HOST", "localhost")
+	// databaseUrl, err := utils.getSecret("DATABASE_URL", "/run/secrets/DATABASE_URL")
+	databaseUrl := utils.GetSecretOrEnv("DATABASE_URL")
+
+	port := utils.GetSecretOrEnv("PORT")
+	host := utils.GetSecretOrEnv("SERVER_HOST")
+
 	if databaseUrl == "" {
-		log.Fatal("DATABASE_URL is not set")
+		return nil, errors.New("DATABASE_URL is not set")
 	}
 
 	return &Config{
 		DatabaseURL: databaseUrl,
 		PORT:        port,
 		HOST:        host,
-	}
+	}, nil
 }
 
+// getEnv fetches environment variables with a fallback
 func getEnv(key, fallback string) string {
 	if value, ok := os.LookupEnv(key); ok {
 		return value

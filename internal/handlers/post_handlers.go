@@ -7,6 +7,7 @@ import (
 
 	"github.com-Personal/go-fiber/internal/models"
 	"github.com-Personal/go-fiber/internal/utils"
+	firebase_utils "github.com-Personal/go-fiber/internal/utils/firebase"
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -81,7 +82,7 @@ func (h *PostHandler) NewPost(c *fiber.Ctx) error {
 
 	newPost.Slug = utils.CreateSlug(newPost.Title)
 
-	imageURL, fileName, err := utils.UploadFileToFirebaseAndGetURL(c, "image", "uploads")
+	imageURL, fileName, err := firebase_utils.UploadFileToFirebaseAndGetURL(c, "image", "uploads")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to upload image",

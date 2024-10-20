@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"os"
 	"regexp"
 	"strings"
 
@@ -27,7 +26,7 @@ func CreateSlug(input string) string {
 
 func ValidateToken(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		return []byte(os.Getenv("JWT_SECRET_KEY")), nil
+		return []byte(GetSecretOrEnv("JWT_SECRET_KEY")), nil
 	})
 
 	if err != nil || !token.Valid {

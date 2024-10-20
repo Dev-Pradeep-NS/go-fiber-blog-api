@@ -10,6 +10,7 @@ import (
 
 	"github.com-Personal/go-fiber/internal/models"
 	"github.com-Personal/go-fiber/internal/utils"
+	firebase_utils "github.com-Personal/go-fiber/internal/utils/firebase"
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
@@ -337,7 +338,7 @@ func generateToken(userID uint, username string, expiration time.Duration) (stri
 		"exp":      time.Now().Add(expiration).Unix(),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secretKey := []byte(os.Getenv("JWT_SECRET_KEY"))
+	secretKey := []byte(utils.GetSecretOrEnv("JWT_SECRET_KEY"))
 	return token.SignedString(secretKey)
 }
 
@@ -488,7 +489,7 @@ func (h *UserHandler) UploadAvatar(c *fiber.Ctx) error {
 		})
 	}
 
-	imageURL, _, err := utils.UploadFileToFirebaseAndGetURL(c, "avatar", "avatars")
+	imageURL, _, err := firebase_utils.UploadFileToFirebaseAndGetURL(c, "avatar", "avatars")
 	if err != nil {
 		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"message": "Failed to upload avatar",
