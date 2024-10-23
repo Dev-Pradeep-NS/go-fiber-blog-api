@@ -1,0 +1,28 @@
+# Dockerfile.prod
+FROM golang:1.23-alpine AS builder
+
+WORKDIR /app
+
+# Copy and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy rest of the application code
+COPY . .
+
+# Build the application
+RUN go build -o main ./cmd/server
+
+# Final production stage
+FROM alpine:latest
+
+WORKDIR /app
+
+# Copy binary from the builder
+COPY --from=builder /app/main .
+
+# Expose the port
+EXPOSE 8000
+
+# Start the application in production
+CMD ["./main"]
