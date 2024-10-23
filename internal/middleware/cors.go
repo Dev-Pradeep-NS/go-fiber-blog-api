@@ -14,6 +14,7 @@ func CorsMiddleware() fiber.Handler {
 			allowedOrigins := []string{
 				"http://localhost",
 				"http://localhost:3000",
+				"http://localhost:3001",
 			}
 			for _, allowedOrigin := range allowedOrigins {
 				if origin == allowedOrigin {
