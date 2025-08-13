@@ -16,7 +16,6 @@ func CorsMiddleware() fiber.Handler {
 				"http://localhost:3000",
 				"http://localhost:3001",
 				"https://specwise-blogs.onrender.com",
-				"http://172.232.115.103",
 			}
 			for _, allowedOrigin := range allowedOrigins {
 				if origin == allowedOrigin {
